@@ -49,7 +49,13 @@ $resultSet=mysqli_query($con,"select * from employee_deatails");
 			{
 				for( ;$rec=mysqli_fetch_row($resultSet); )
 				{
-				
+					echo"Id  =  ".$rec[0]."<br>";
+					echo"Name =  ".$rec[1]."<br>";
+					.
+					.
+					.
+					.
+					
 				}
 			}
 			else
