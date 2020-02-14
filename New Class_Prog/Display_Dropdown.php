@@ -23,8 +23,8 @@ $data=mysqli_query($con,"show tables");
 			?>
 			
 			<form action="" method="POST">
-				<select>
-				<option>--Select DB--</option>
+				<select name="table" id="table">
+				<option value="">--Select DB--</option>
 			
 			
 			<?php
@@ -44,7 +44,19 @@ $data=mysqli_query($con,"show tables");
 			</form>
 			
 			
-			<?php			
+			<?php	
+
+
+			if(isset($_POST['submit'])) 
+			{
+				
+			}
+			else
+			{
+				echo"<p>Please Select the table for Procedure</p>";
+			}
+
+			
 		}
 		else
 		{
