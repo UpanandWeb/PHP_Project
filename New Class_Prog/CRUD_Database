@@ -1,0 +1,111 @@
+if(isset($_post['submit'])) 
+				{
+					$tab=$_post("table");
+					if(!empty($tab))
+					{
+						$data=mysqli_query($con,"select * from $tab");
+						if(mysqli_num_rows($data)>0)
+						{
+							
+							/* <table>
+									<tr>
+										<th> </th>
+									</tr>
+									<tr>
+										<td> </td>
+									</tr>	
+								</table>  */
+							
+							?>
+							<table>
+											<tr>
+												<?php
+													while($col=mysqli_fetch_field($data))
+													{
+														?>
+														<th <?php echo ucfirst($col->name); ?> > </th>
+																										
+														<?php
+													}
+													
+												?>
+											</tr>	
+									
+									<?php
+									
+									while($rec=mysqli_fetch_assoc($data))
+										{
+											?>
+											<tr>
+												<?php
+												$cols=mysqli_fetch_fields($data);
+												for($i=0;$i<count($cols);$i++)
+												{
+													?>
+													<td> <?php echo $rec[$cols[$i]->name]; ?></td>
+													
+													<?php
+												}
+												?>
+											</tr>
+											<?php
+										}										
+									
+									?>
+									
+							</table> 
+							<?php
+							
+						}
+						
+						
+						
+						
+					}	
+					else
+					{
+						echo"<p> Sorry! No Records Founds</p>";
+					}
+				}
+				else
+				{
+					echo"<p>Please Select the table for Procedure</p>";
+				}
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				while($rec=mysqli_fetch_assoc($data))
+										{
+											?>
+											<tr>
+												<?php
+												$cols=mysqli_fetch_fields($data);
+												for($i=0;$i<count($cols);$i++)
+												{
+													?>
+													<td> <?php echo $rec[$cols[$i]->name]; ?></td>													
+													<?php
+												}
+												?>
+											</tr>
+											<?php
+										}										
+									
+									?>
+									
