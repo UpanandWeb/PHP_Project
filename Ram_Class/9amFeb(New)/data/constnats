@@ -1,0 +1,48 @@
+Define():
+========
+by using this method we can define constants
+this method contains two parameters
+1.name of the constant
+2.value of the constant
+
+synatax:
+define("key","value");
+
+examples:
+
+define("state","TS");
+define("city","Hyderabad");
+
+Note: We can not redeclare the constants
+
+
+Accessing constants
+===================
+
+by using the name of the constant we can access the constant values
+
+echo state;
+echo city;
+
+Note: Constants are case sensitive
+
+echo STATE;//error
+
+
+2.const keyword
+===================
+by using const keyword we can define the contstants
+
+Syntax:
+const key = "value";
+
+examples:
+
+const STATE = "TS";
+const city = "Hyderabad";
+
+
+
+
+
+

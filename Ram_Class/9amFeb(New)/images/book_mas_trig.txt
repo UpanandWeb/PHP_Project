@@ -1,0 +1,263 @@
+triggers :
+------------  
+  
+
+Table creations :
+-----------------
+Create table Book_mas
+( Book_id Varchar2(10) Primary Key,
+  Book_Name Varchar2(15),
+  Author_Name Varchar2(15)
+);
+
+Create Table Stock_Mas
+( Book_Id Varchar2(10)
+	 REFERENCES Book_Mas(Book_Id),
+  Avail_Stock Number(4)
+);
+
+Create table Book_Issue
+( Tno Number(4) Primary Key,
+  Std_name Varchar2(10),
+  Class Varchar2(5),
+  Book_id Varchar2(10) 
+	    REFERENCES Book_Mas(Book_Id),
+  Issued_Books Number(2),
+  DoI Date,
+  DoR Date
+);
+
+Inserting data :
+----------------
+Insert into Book_mas Values
+  ( 'b1','let us c','kenthkar');
+Insert into Book_mas Values
+  ( 'b2','oracle','deshpande');
+Insert into Book_mas Values
+  ( 'b3','java','b swamy');
+
+Insert into stock_mas values ('b1',10);
+Insert into stock_mas values ('b2',8);
+Insert into stock_mas values ('b3',1);
+
+commit;
+
+select * from book_mas;
+select * from stock_mas;
+
+
+insert into book_issue ( std_name, class, book_id, issued_books ) values ('anand','xi','b4',2 );
+
+Sequence for to generate tno :
+------------------------------
+Create sequence tno_seq
+start with 1
+increment by 1;
+
+Trigger for Before Insert or update Events:
+-------------------------------------------
+Create or replace trigger 		book_issue_before_ins_upd_Trig
+Before Insert or Update 
+ON Book_Issue 
+for each row
+declare
+  record_not_found Exception;
+  pragma exception_init(record_not_found,
+				-02291);
+  v_stock number;
+Begin
+ if INSERTING then
+  :new.tno := tno_seq.nextval;  
+  :new.std_name := upper(:new.std_name);
+  if :new.class not in ( 'xi','xii') then
+     raise_application_error(-20501,
+       'Invalid Class Id!!!!!');
+  end if;
+  if :new.issued_books != 1 then  
+     raise_application_error(-20503,
+      'Min and Max. Issued Books only 1.');
+  end if;
+  select avail_stock into v_stock 
+          from  stock_mas 
+            where book_id=:new.book_id;
+  if v_stock=0 then
+     raise_application_error(-20504,
+       'Stock Is Not Available!!!!!');
+  end if;
+  :new.Doi := SYSDATE;
+Elsif UPDATING then
+ if :old.Dor  is Not Null then
+    raise_application_error(-20506,
+         'Book is Already Returned');
+ elsif trunc(:new.dor) <trunc(:old.DoI) then
+      raise_application_error(-20505,
+        'DoR should be >= Date of Issue');
+ end if;
+End if;
+Exception
+ when no_data_found then
+   raise_application_error(-20506,'Invalid Book Id!!!!!');
+ when record_not_found then
+  raise_application_error(-20502,
+		'Invalid Book Id!!!!!');
+End;
+/
+
+Trigger for After Insert or Update Events:
+------------------------------------------
+Create or replace trigger book_issue_after_ins_upd_Trig
+After Insert or Update 
+ON Book_issue 
+for Each Row
+Begin
+ If INSERTING then
+    Update stock_mas set avail_stock = 	       avail_stock - :new.Issued_books
+	    where book_id = :new.book_id;
+ Elsif UPDATING then
+   Update stock_mas set avail_stock = 	             avail_stock + :old.issued_books 
+               where book_id=:new.book_id;   
+ End if;
+End;
+/
+
+Testing :
+---------
+
+sql> Select * from book_mas;
+
+sql> Select * from stock_Mas;
+
+Book_issue student :
+--------------------
+ Insert into book_issue 
+   ( std_name, class, book_id, issued_Books) 
+	values ( 'kiran','xi','b1',1 );
+
+ select * from stock_mas;
+ select * from book_issue;
+
+Book Return to Library :
+------------------------
+
+update book_issue set dor= sysdate+1 
+   			where tno=1;
+
+select * from stock_mas;
+select * from book_issue;
+
+Create table public_holiday
+( hdate date, description varchar2(30) );
+
+insert into public_holiday values 
+ ('26-jan-19','Re-Public Day');
+
+insert into public_holiday values 
+ ('15-aug-19','Independance Day');
+
+insert into public_holiday values 
+ ('25-dec-19','Christmas');
+
+commit;
+
+select * from public_holiday;
+
+Trigger :
+---------
+Create or replace trigger holi_trig
+Before Insert or Update or Delete
+ON Emp
+declare
+ cnt number;
+ v_description varchar2(40);
+begin
+ if to_char(sysdate,'hh24') 
+	not between 10 and 16 then
+   raise_application_error(-20601,
+    'Offtimings, Trans. are Not Allowed.');
+ end if;
+ If to_char(sysdate,'dy') in 
+		('sat','sun') then
+   raise_application_error(-20602,
+     'WeekEnds, Trans. are Not Allowed.');
+ End if;
+ Select count(Hdate),Description into 
+          cnt , v_description
+  	     from Public_Holiday 
+	  where trunc(hdate)=trunc(sysdate)
+		group by Description;
+ if cnt=1 then
+    raise_application_error(-20603,
+	'Today '||v_description ||
+		' Trans. are Not Allowed.');
+ end if;
+End;
+/
+
+
+sql> update emp set sal = sal + 1000;
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ insert into book_issue
+  ( std_name, class, book_id, issued_books)
+      values ( 'anand', 'xi', 'b5',1 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
