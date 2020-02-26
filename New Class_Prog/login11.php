@@ -2,9 +2,7 @@
 session_start();
 $con=mysqli_connect("localhost","root","","contact_form")or die("unable to connect to DB");
 
-	/* <?php session_start();
-		include("connect.php");
-		?>  */
+
 ?>
 <html>
 	<head>

@@ -1,0 +1,665 @@
+-- write a package program to develop bank  appl.
+
+Modules:
+--------
+i. open a new account
+
+ii. deposite amount
+
+iii. withdraw amount
+
+iv. transfer amount
+
+V. to check account balance
+
+vi. Mini statement
+
+vii. Account Statement
+
+viii. View account details
+
+ix. to delete a account
+
+
+
+Table Creations:
+----------------
+
+Create table bank_mas
+( Accno varchar2(10),
+  cname varchar2(15),
+  odate date,
+  acc_type char(1),
+  balance number(8,2)
+);
+
+sequence for to generate account nos.
+*************************************
+Create sequence accno_seq
+start with 1
+increment by 1;
+
+
+********* PACKAGE SPECIFICATION ********
+
+Create  or replace package bank_pack
+                is
+  -- package spec. for to open a new account
+ procedure new_acc
+ ( v_cname Bank_mas.cname%type,
+   v_acc_type bank_mas.acc_type%type,
+   v_mobileno bank_mas.mobileno%type,   
+   v_balance Bank_mas.balance%type );
+
+  -- package spec. for to deposit amount
+
+  Procedure Credit
+   ( v_accno bank_mas.accno%type, 
+     Tamount Number );
+
+   -- package spec. for to withdraw amt
+   Procedure Debit
+    ( v_accno bank_mas.accno%type,
+      Tamount Number );
+
+     -- package spec. for to tranfer amt
+    Procedure Trans_Amt
+     (  s_accno Bank_mas.accno%type,  
+         d_accno bank_mas.accno%type, 
+         tamount number );	 
+
+    -- Package spec. for to check balance
+    
+    Function chk_bal(
+	 v_accno bank_mas.accno%type )
+           return number;
+      -- package spec. for to chek balance
+    Function chk_bal(
+	 v_mobileno bank_mas.mobileno%type )
+           return number;
+
+ -- Procspec. for to delete a account a/c
+      
+         Procedure del_acc
+	  (v_accno bank_mas.accno%type);
+    
+  /* Procedure spec. for to delete a             account using Mobileno. */
+      
+      Procedure del_acc
+     (v_mobileno bank_mas.mobileno%type);
+
+-- procedure spec. for to generate ministatement
+Procedure Ministatement
+   (  v_accno bank_trans.saccno%type );
+
+ -- procedure spec.for account statement
+procedure acc_stat 
+   ( v_saccno bank_trans.saccno%type,
+     sdate date, edate Date );
+
+-- procedure spec for view acc details using accno
+procedure view_acc
+   (  v_accno bank_mas.accno%type );
+
+-- procedure spec for view acc details using mobileno
+
+procedure view_acc
+   (  v_mobileno bank_mas.mobileno%type );
+
+End bank_pack;
+/
+
+
+     ********** PACKAGE BODY **********
+
+Create or Replace Package Body Bank_Pack
+                  is
+ -- procedure body for to open a new a/c
+ procedure new_acc
+ ( v_cname Bank_mas.cname%type,
+   v_acc_type bank_mas.acc_type%type,
+   v_mobileno bank_mas.mobileno%type,   
+   v_balance Bank_mas.balance%type )  
+                   is
+   v_accno bank_mas.accno%type;
+Begin
+   if upper(v_acc_type)=upper('s') then
+     if v_balance < 500 then
+       raise_application_error(-20001, 
+'Savings A/c. Min Opening Balance Rs.500/-.');
+    end if;
+   elsif upper(v_acc_type)=upper('c') then
+      if v_balance < 1000 then
+         raise_application_error(-20002,
+'Current A/c. Min. Opening Balance Rs.1000/-.');
+      end if;
+ else
+  raise_application_error(-20003, 'Invalid Account Type!!!!!');
+ end if;
+ if length(v_mobileno)!=10 then
+    raise_application_error(-20004, 
+	'Invalid Mobileno');
+ end if;
+ v_accno := 'sbi'||(accno_seq.nextval);
+ Insert into bank_mas values 
+  ( v_accno, upper(v_cname),v_mobileno, sysdate, v_acc_type,  v_balance);
+ dopl('Account Created Successfully.');
+end new_acc;
+
+ -- proc body for to deposit amount
+
+Procedure Credit
+   ( v_accno bank_mas.accno%type,
+     Tamount Number )
+                   is
+Begin
+  Update bank_mas set balance = Balance + Tamount 
+		where accno = v_accno;
+  dopl('Amount Credited to Account');
+End Credit;
+
+ -- procedure body for to withdraw amount
+Procedure Debit
+ ( v_accno bank_mas.accno%type,
+   Tamount Number )
+               is
+Begin
+  update bank_mas set balance = Balance - 	tamount where accno = v_accno;
+  dopl('Amount Debited from Account.');
+End Debit;
+
+  -- procedure body for to transfer amt
+
+Procedure Trans_Amt
+  (  s_accno Bank_mas.accno%type,    
+     d_accno bank_mas.accno%type,    
+     tamount number )	       
+                 is
+Begin
+  debit( s_accno, tamount);
+  credit( d_accno, tamount);
+  dopl('Amount Transfer Successfully.');
+End Trans_amt;
+
+--Function body for to check bal using accno
+
+Function chk_bal( v_Accno 
+		bank_mas.Accno%type )
+          return number
+                  is
+  v_bal number;
+Begin
+  select balance into v_bal from bank_mas
+		where accno=v_accno;
+  return(v_bal);
+Exception
+  when no_data_found then
+    return(-1);
+End chk_bal;
+
+ /*Function body for to check bal using    mobileno */
+
+Function chk_bal( v_mobileno 
+		bank_mas.mobileno%type )
+        return number
+                  is
+  v_bal number;
+Begin
+  select balance into v_bal from bank_mas
+		where mobileno=v_mobileno;
+  return(v_bal);
+Exception
+  when no_data_found then
+    return(-1);
+End chk_bal;
+
+ -- Proc body. for to delete a account a/c
+      
+    Procedure del_acc
+	  (v_accno bank_mas.accno%type)
+		is
+    begin
+      delete from bank_mas
+		 where accno=v_accno;
+      if sql%found then
+         dopl('Record Deleted.');
+      else
+         dopl('Invalid Accno!!!');
+      end if;
+   End del_acc;
+
+-- Proc body. for to delete a account a/c
+      
+    Procedure del_acc
+     (v_mobileno bank_mas.mobileno%type)
+		is
+    begin
+      delete from bank_mas
+		 where mobileno=v_mobileno;
+      if sql%found then
+         dopl('Record Deleted.');
+      else
+         dopl('Invalid Mobileno!!!');
+      end if;
+   End del_acc;
+
+-- procedure body for ministatement 
+
+Procedure Ministatement
+   (  v_accno bank_trans.saccno%type )
+                     is
+  cursor mini_cur 
+         is
+select * from bank_trans where saccno='sbi1'
+    and rownum<=(select count(*)  from bank_trans
+                     where saccno='sbi1')
+		minus
+select * from bank_trans where saccno='sbi1'
+    and rownum<=(select count(*)-5 from bank_trans
+                     where saccno='sbi1');
+  i mini_cur%rowtype;
+begin
+ dopl('******** MINI STATEMENT **********');
+ open mini_cur;
+ loop
+   fetch mini_cur into i;
+   exit when mini_cur%notfound;
+   dopl(mini_cur%rowcount||' '||i.Saccno||' '||i.Tdate||
+			' '||i.ttype||' '||i.tamount);
+ end loop;
+ close mini_cur;
+ dopl('*********************************');
+End ministatement;
+
+-- procedure body for to generate account statement
+
+procedure acc_stat 
+   ( v_saccno bank_trans.saccno%type,
+     sdate date, edate Date )
+                    is
+   cursor acc_cur is select * from Bank_trans
+          where trunc(tdate) between 
+		trunc(sdate) and trunc(edate)
+			    and		
+		    Saccno = v_Saccno;
+  i acc_cur%rowtype;
+  bm bank_mas%rowtype;
+begin 
+     select * into bm from bank_mas 
+		where accno = v_saccno;
+   if trunc(sdate) < trunc(bm.odate) then
+      raise_application_error(-20601,
+		'Starting should be >= Opening Date');
+   elsif trunc(Edate) > trunc(sysdate) then
+      raise_application_error(-20602,
+		'Ending Date should be <= System date');
+   end if;  
+   dopl('******** ACCOUNT STATEMENT *********');
+   dopl('Accno 		: '||bm.Accno);
+   dopl('Cust Name	: '||bm.Cname);
+   dopl('Opening Dated	: '||bm.ODate);
+   dopl('Account Type	: '||bm.acc_type);
+   dopl('Balance 	: '||bm.balance);
+   open acc_cur;
+   dopl('***********************************');
+   loop
+     fetch acc_cur into i;
+     exit when acc_cur%notfound;
+     dopl(i.Saccno||' '||i.tdate||' '||i.ttype||
+		' '||i.Tamount);
+   end loop;
+   close acc_cur;
+ End acc_stat;
+
+/* procedure body for to view account details using 
+   account no. */
+    
+procedure view_acc
+   (  v_accno bank_mas.accno%type )
+                 is 
+ bm bank_mas%rowtype;
+Begin
+  select * into bm from bank_mas where accno = v_accno;
+  dopl('**** Account Details ****');
+  dopl('Accno 		: '||bm.Accno);
+  dopl('Cust Name 	: '||bm.cname);
+  dopl('Mobileno 	: '||bm.mobileno);
+  dopl('Opening Date 	: '||bm.Odate);
+  dopl('Acc Type 	: '||bm.acc_type);
+  dopl('Balance 	: '||bm.Balance);
+  dopl('*************************');
+Exception
+  when no_data_found then
+    dopl('Account Not Found!!!!');
+End view_Acc;
+
+/* procedure body for to view account details by using    Mobile No. */
+
+procedure view_acc
+   (  v_mobileno bank_mas.mobileno%type )
+                 is 
+ bm bank_mas%rowtype;
+Begin
+  select * into bm from bank_mas where mobileno = v_mobileno;
+  dopl('**** Account Details ****');
+  dopl('Accno 		: '||bm.Accno);
+  dopl('Cust Name 	: '||bm.cname);
+  dopl('Mobileno 	: '||bm.mobileno);
+  dopl('Opening Date 	: '||bm.Odate);
+  dopl('Acc Type 	: '||bm.acc_type);
+  dopl('Balance 	: '||bm.Balance);
+  dopl('*************************');
+Exception
+  when no_data_found then
+    dopl('Account Not Found!!!!');
+End view_Acc;
+End bank_pack;
+/
+
+Execution process :
+-------------------
+
+** to open a new account **
+
+sql> Exec bank_pack.new_acc('king','s',9000994005,700);
+
+sql> Exec bank_pack.new_acc('scott','c',9000994006,1400);
+
+sql> commit;
+
+sql> select * from bank_mas;
+
+** to deposit amount
+
+sql> select *from bank_mas;
+
+sql> exec bank_pack.credit('sbi1',1000);
+
+sql> select * from bank_mas;
+
+** withdraw amount
+
+sql> select * from bank_mas;
+
+sql> exec bank_pack.debit('sbi1',500);
+
+sql> select * from bank_mas;
+
+** Transfer amount
+
+sql> select * from bank_mas;
+
+sql> exec bank_pack.trans_amt('sbi1','sbi2',100);
+
+** to chek account balances 
+
+sql> select bank_pack.chk_bal('sbi1') from      dual;
+
+sql> select bank_pack.chk_bal(9000994005)      from dual;
+
+** to delete a account
+
+sql> select * from bank_mas;
+
+sql> exec bank_pack.del_acc(9000994007);
+
+sql> exec bank_pack.del_acc('sbi10');
+
+sql> select *from bank_mas;
+
+** Create a Bank Transaction table with TNO,    Source Accno, Destination Accno, Tran. 
+   Date, Trans. type & Tran. Amount
+
+Validations:
+------------
+
+   -> Tno should be generate automatically
+
+   -> Saccno & DAccnos are should be       available bank_mas table.
+
+   -> Trans. date is system date
+
+   -> Trans. type should be accepts 'd' ,          'w'  or 'at'
+
+   -> if Trans. type is 'at' then         DACCNO are mandatory 
+
+   -> Mini. Trans. amount rs.100 & it should       be multiples of Hunderabad.
+
+   -> 
+if customer desposited amount             successfully then update the balance 
+      in master.
+  
+   -> if trans. type 'w' then check the            available balance.
+
+   -> if customer amount withdraw       successfully then update the balance
+
+   -> if customer completed 5 withdraws in       the current month, next trans. onwards 
+      to charge extra rs.20/-
+
+Table Creation:
+---------------
+Create table Bank_Trans
+( Tno number(4),
+  Saccno varchar2(10),
+  Daccno varchar2(10),
+  Tdate date,
+  Ttype varchar2(2),
+  Tamount Number(8,2)
+);
+
+Sequence for to generate tran. nos.
+-----------------------------------
+
+Create sequence tno_seq
+start with 1
+increment by 1;
+
+Trigger on Bank_Trans :
+-----------------------
+Create or replace trigger bank_trans
+before Insert on Bank_trans 
+for each row
+declare
+ scnt number;
+ dcnt number;
+ v_acc_type Bank_mas.acc_type%type;
+ v_bal Bank_mas.balance%type;
+ no_of_withdraws number;
+begin
+  select count(*) into scnt from bank_mas
+		  where accno = :new.saccno;
+  select count(*) into dcnt from bank_mas
+		  where accno = :new.daccno;
+  if :new.ttype in ('d','w') then
+     if :New.saccno is null then
+        raise_application_error(-20601,
+	    'Source Accno is Mandatory');
+     elsif scnt=0 then
+        raise_application_error(-20602,
+	    'Invalid Saccno!!!!!');
+     end if;
+ elsif :new.ttype = 'at' then
+     if :new.Saccno is null or 
+               :new.Daccno is null then
+       raise_application_error(-20603,
+	'Accnos is Mandatory!!!!!');
+     elsif scnt=0 or dcnt=0 then
+      raise_application_error(-20604,
+	'Inavalid Accnos!!!!!');
+     end if;
+ End if;
+ :new.tdate := sysdate;
+ if :new.tamount<100 then
+    Raise_application_error(-20605,
+	'Minimum Trans. Amount Rs.100/-.');
+ elsif Mod(:new.tamount,100)!=0 then
+    Raise_application_error(-20606,
+    'Tamount should be Multiple of 100/-.');
+ end if;
+ if :new.ttype='d' then
+   Bank_pack.credit(:new.Saccno,:new.tamount);  
+ elsif :new.ttype='w' then
+  select count(*) into no_of_withdraws
+	from Bank_trans
+	  where Saccno = :new.Saccno
+			and
+	 	Ttype = :new.Ttype
+			and
+	to_char(tdate,'mm-yyyy')=
+	to_char(sysdate,'mm-yyyy');
+   if no_of_withdraws>=5 then
+      :new.Tamount := :new.Tamount + 20;
+   end if;
+   Select acc_type, balance 
+           into v_acc_type, v_bal 
+                from bank_mas 
+		  where accno = :new.saccno;
+   if v_acc_type='s' then
+      if (v_bal - :new.tamount) >=500 then
+       bank_pack.debit	           (:new.Saccno,:new.tamount);
+      else
+       raise_application_error(-20607,
+       'In-sufficient balance and your               withdraw Power is Rs.'||
+ 		(v_bal - 500 ) );
+      end if;
+   elsif v_acc_type='c' then
+    if( v_bal - :new.tamount )>=1000 then
+     bank_pack.Debit                                 (:new.Saccno,:new.Tamount);
+    else
+      raise_application_error(-20608,
+       'In-sufficient balance and your               withdraw Power is Rs.'||
+ 		(v_bal - 1000 ) );
+    end if;
+   End if;
+ elsif :new.ttype='at' then
+  Select acc_type, balance 
+           into v_acc_type, v_bal 
+                from bank_mas 
+		  where accno = :new.saccno;
+   if v_acc_type='s' then
+      if (v_bal - :new.tamount) >=500 then
+       bank_pack.trans_amt(:New.Saccno, :New.Daccno,:new.Tamount);
+      else
+       raise_application_error(-20608,
+       'In-sufficient balance and your               withdraw Power is Rs.'||
+ 		(v_bal - 500 ) );
+      end if;
+  elsif v_acc_type='c' then
+    if( v_bal - :new.tamount )>=1000 then
+    bank_pack.trans_amt(:New.Saccno,          :New.Daccno,:new.Tamount);
+    else
+      raise_application_error(-20609,
+       'In-sufficient balance and your               withdraw Power is Rs.'||
+ 		(v_bal - 1000 ) );
+    end if;
+   End if;
+ else
+   Raise_application_error(-20609,
+              'Invalid Trans. type!!!!');
+ end if;
+ :new.tno := tno_seq.nextval;
+End;
+/
+
+  
+bank_mas:
+---------
+VALID INPUT :
+-------------
+
+Deposit amount to sbi1 :
+------------------------
+select * from bank_mas;
+select * from bank_trans;
+
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','d',1000);
+select * from bank_mas;
+select * from bank_trans;
+
+withdraw amount from sbi1 :
+------------------------
+select * from bank_mas;
+select * from bank_trans;
+
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',100);
+
+select * from bank_mas;
+select * from bank_trans;
+
+amount transfer using accnos:
+----------------------------
+select * from bank_mas;
+select * from bank_trans;
+
+Insert into bank_trans(Saccno,DAccno,ttype,tamount) values('sbi1','sbi2','at',100);
+
+select * from bank_mas;
+select * from bank_trans;
+
+Morethan 5 withdraws :
+----------------------
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',100);
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',100);
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',100);
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',100);
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',100);
+
+select * from bank_mas;
+select * from bank_trans;
+
+
+INVALID INPUT :
+---------------
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','w',2000);
+
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','sbi2','w',2000);
+
+Insert into bank_trans(Saccno,ttype,tamount) values ('sbi1','x',2000);
+
+
+
+
+
+
+
+
+      
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+ 
+
+
+
+
+
+
+
+
+    
+
+ 
+
+
+
+
+
+
